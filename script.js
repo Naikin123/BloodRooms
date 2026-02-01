@@ -193,3 +193,12 @@ const supabase = createClient(
   'TU_SUPABASE_URL',
   'TU_PUBLIC_ANON_KEY'
 )
+
+const { data, error } = await supabase
+  .from('evidences')
+  .select('*')
+  .order('created_at', { ascending: false })
+
+data.forEach(item => {
+  // renderizas el feed con item.image_url
+})
