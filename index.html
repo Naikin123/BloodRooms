@@ -1,34 +1,53 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>BloodRooms</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BloodRooms — Nivel 0</title>
+
+  <!-- Enlace al CSS EN LA RAÍZ (IMPORTANTE) -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div id="app">
+    <header class="site-header">
+      <div class="logo">BLOODROOMS</div>
+      <nav class="top-nav">
+        <button id="btn-scan" class="btn">Escanear</button>
+        <button id="btn-glitch" class="btn">Forzar glitch</button>
+      </nav>
+    </header>
 
-  <div id="container">
+    <main class="content">
+      <section class="found-file">
+        <h1 class="title">EXPEDIENTE: NIVEL 0</h1>
+        <p class="subtitle">Archivo recuperado — abrir con precaución.</p>
 
-    <h1 class="title">BLOOD ROOMS</h1>
+        <div class="media">
+          <img id="mainImg" src="assets/images/room1.jpg" alt="Room 1 (asset missing?)">
+        </div>
 
-    <p class="subtitle">
-      Archivo recuperado.<br>
-      El origen es desconocido.
-    </p>
+        <div class="log">
+          <p id="logText">
+            00:12 — Registro inicial. Condiciones: inestables. No permanecer más de 12 minutos.
+          </p>
+        </div>
 
-    <div class="image-box">
-      <img src="assets/images/room1.jpg" alt="Room">
-    </div>
+        <div class="controls">
+          <button id="nextBtn" class="btn primary">CONTINUAR</button>
+          <button id="evidenceBtn" class="btn ghost">VER EVIDENCIA</button>
+        </div>
+      </section>
+    </main>
 
-    <p class="log">
-      Nivel 0 registrado.<br>
-      No se recomienda permanecer demasiado tiempo.
-    </p>
+    <div id="glitchOverlay" class="glitch-overlay" aria-hidden="true"></div>
 
-    <button id="nextBtn">Continuar</button>
-
+    <footer class="site-footer small-muted">
+      BloodRooms — prototipo ARG — assets locales
+    </footer>
   </div>
 
-  <script src="js/main.js"></script>
+  <!-- Enlace al JS EN LA RAÍZ (IMPORTANTE) -->
+  <script src="script.js"></script>
 </body>
 </html>
