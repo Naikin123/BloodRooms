@@ -186,3 +186,10 @@ function init(){
 
 // On ready
 document.addEventListener('DOMContentLoaded', init);
+
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+const supabase = createClient(
+  'TU_SUPABASE_URL',
+  'TU_PUBLIC_ANON_KEY'
+)
