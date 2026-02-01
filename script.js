@@ -1,112 +1,188 @@
-// script.js — BloodRooms: interacción mínima + comprobación CSS
+// script.js — BloodRooms: theme "sangriento" + uploader (localStorage)
+// Keys
+const KEY_FEED = 'bloodrooms_feed_v1';
+const KEY_NOTES = 'bloodrooms_notes_v1';
 
+// State
+let FEED = JSON.parse(localStorage.getItem(KEY_FEED) || '[]');
+
+// Helpers
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const uid = (p='id') => p + Math.floor(Math.random()*999999);
+
+// Check CSS loaded
 (function(){
-  const cssFlag = getComputedStyle(document.documentElement).getPropertyValue('--css-loaded').trim();
-  if(!cssFlag){
-    console.warn('⚠️ AVISO: El CSS no parece estar cargado. Verifica que style.css esté en la misma carpeta que index.html y que el link href sea "style.css".');
-    // Mostrar aviso visible para pruebas (temporal)
-    const warn = document.createElement('div');
-    warn.textContent = 'AVISO: CSS no cargado (ver consola)';
-    Object.assign(warn.style, {position:'fixed',left:10,bottom:10,background:'#b30000',color:'#fff',padding:'8px 10px',borderRadius:6,zIndex:9999});
-    document.body.appendChild(warn);
-    setTimeout(()=> warn.remove(), 6000);
-  } else {
-    console.log('✅ CSS cargado correctamente.');
+  const flag = getComputedStyle(document.documentElement).getPropertyValue('--css-loaded').trim();
+  if(!flag){
+    console.warn('⚠️ CSS no cargado. Verifica style.css en la raíz y link en index.html');
+    const w = document.createElement('div'); w.textContent = 'AVISO: CSS no cargado'; Object.assign(w.style,{position:'fixed',right:12,bottom:12,background:'#bf0f10',color:'#fff',padding:'8px 10px',borderRadius:6,zIndex:9999}); document.body.appendChild(w); setTimeout(()=>w.remove(),6000);
   }
-
-  const nextBtn = document.getElementById('nextBtn');
-  const glitchBtn = document.getElementById('btn-glitch');
-  const scanBtn = document.getElementById('btn-scan');
-  const evidenceBtn = document.getElementById('evidenceBtn');
-  const img = document.getElementById('mainImg');
-  const logText = document.getElementById('logText');
-  const overlay = document.getElementById('glitchOverlay');
-
-  // lista de imagenes (pon tus nombres en assets/images/)
-  const images = [
-    'assets/images/room1.jpg',
-    'assets/images/room2.jpg',
-    'assets/images/hallway.jpg'
-  ];
-
-  // función de cambio aleatorio de imagen (si no existe archivo, no rompe)
-  function swapImageRandom(){
-    const available = images.slice();
-    // filtra por existencia tentativa (no leemos FS aquí) — dejamos al usuario subir
-    const pick = available[Math.floor(Math.random()*available.length)];
-    img.src = pick;
-  }
-
-  // glitch visual breve
-  function doGlitch(short = true){
-    overlay.classList.add('active');
-    img.style.filter = 'contrast(1.6) hue-rotate(15deg) saturate(1.5) blur(0.6px)';
-    setTimeout(()=>{
-      overlay.classList.remove('active');
-      img.style.filter = '';
-    }, short ? 600 : 1800);
-  }
-
-  // scramble text
-  function scrambleText(node, finalText){
-    const original = node.textContent;
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_+=[]{}";
-    const duration = 700;
-    const frameRate = 30;
-    const frames = Math.round(duration / (1000/frameRate));
-    let frame = 0;
-    const interval = setInterval(()=>{
-      const pct = frame / frames;
-      if(frame >= frames){
-        node.textContent = finalText;
-        node.classList.remove('glitch-scramble');
-        clearInterval(interval);
-        return;
-      }
-      // build scrambled
-      let out = '';
-      for(let i=0;i<finalText.length;i++){
-        if(Math.random() < (pct*1.15)) out += finalText[i];
-        else out += chars[Math.floor(Math.random()*chars.length)];
-      }
-      node.textContent = out;
-      node.classList.add('glitch-scramble');
-      frame++;
-    }, 1000/frameRate);
-  }
-
-  // botones
-  nextBtn && nextBtn.addEventListener('click', ()=>{
-    doGlitch(false);
-    // cambiar imagen y actualizar log
-    swapImageRandom();
-    scrambleText(logText, '01:24 — Detectado movimiento. No permanecer. Proceda a salida alternativa.');
-    // premio/penalidad demo (puedes meter GUA después)
-  });
-
-  glitchBtn && glitchBtn.addEventListener('click', ()=>{
-    doGlitch(true);
-    scrambleText(logText, 'ERROR: fragmento corrupto...');
-  });
-
-  scanBtn && scanBtn.addEventListener('click', ()=>{
-    // efecto tipo "escaneo"
-    const prev = logText.textContent;
-    scrambleText(logText, 'SCAN: mapeando geom. anómala...');
-    setTimeout(()=> scrambleText(logText, prev), 1200);
-  });
-
-  evidenceBtn && evidenceBtn.addEventListener('click', ()=> {
-    // abrir "evidencia" -> cambiar imagen y texto
-    swapImageRandom();
-    scrambleText(logText, 'EVIDENCIA #A-12: marcas en el piso — toma 3');
-    doGlitch(true);
-  });
-
-  // on load ensure a default image exists fallback
-  img.addEventListener('error', ()=>{
-    img.alt = "Imagen no encontrada. Coloca archivos en assets/images/ y nombres: room1.jpg, room2.jpg, hallway.jpg";
-    img.style.filter = 'grayscale(1) contrast(.8)';
-  });
-
 })();
+
+// Render feed
+function renderFeed(){
+  const list = $('#feedList');
+  list.innerHTML = '';
+  if(!FEED.length){
+    list.innerHTML = `<div class="small-muted">No hay evidencias subidas aún.</div>`;
+    return;
+  }
+  FEED.forEach(item=>{
+    const el = document.createElement('div'); el.className='feed-item';
+    el.innerHTML = `
+      <div class="feed-thumb"><img src="${item.image}" alt="${escapeHtml(item.title)}"></div>
+      <div class="feed-body">
+        <div class="feed-title">${escapeHtml(item.title)}</div>
+        <div class="feed-meta">${escapeHtml(item.author)} • ${new Date(item.created).toLocaleString()}</div>
+        <div class="feed-desc">${escapeHtml(item.description)}</div>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+}
+
+// Escape simple HTML
+function escapeHtml(s=''){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Save feed
+function saveFeed(){ localStorage.setItem(KEY_FEED, JSON.stringify(FEED)); }
+
+// Resize image using canvas to limit size (maxWidth)
+function resizeImage(file, maxWidth = 1200, quality = 0.8){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject('Error leyendo archivo');
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = (img.width > maxWidth) ? (maxWidth / img.width) : 1;
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        // export as JPEG to reduce size
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.onerror = () => reject('Formato de imagen no válido');
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Upload handler: validate, resize, push to feed
+async function handlePublish(){
+  const fileInput = $('#uploadFile');
+  const title = $('#uploadTitle').value.trim() || 'Sin título';
+  const author = $('#uploadAuthor').value.trim() || 'Anónimo';
+  const desc = $('#uploadDesc').value.trim() || '';
+
+  if(!fileInput.files || !fileInput.files[0]){
+    alert('Selecciona una imagen para subir.');
+    return;
+  }
+  const file = fileInput.files[0];
+  // validate type
+  if(!file.type.startsWith('image/')){
+    alert('Solo se permiten imágenes.');
+    return;
+  }
+  // optional size hint
+  if(file.size > 5 * 1024 * 1024){ // >5MB
+    if(!confirm('La imagen es grande (>5MB). ¿Quieres intentar subirla comprimida?')) return;
+  }
+
+  $('#uploadPublishBtn').disabled = true;
+  $('#uploadPublishBtn').textContent = 'Subiendo...';
+
+  try {
+    // resize/compress
+    const dataUrl = await resizeImage(file, 1200, 0.8);
+    // create item
+    const item = { id: uid('v'), title, author, description: desc, image: dataUrl, created: Date.now() };
+    // add to feed (front)
+    FEED.unshift(item);
+    saveFeed();
+    renderFeed();
+    // clear inputs and preview
+    fileInput.value = '';
+    $('#uploadTitle').value = '';
+    $('#uploadAuthor').value = '';
+    $('#uploadDesc').value = '';
+    $('#uploadPreview').innerHTML = 'Publicado correctamente.';
+    setTimeout(()=> $('#uploadPreview').innerHTML = 'Sin previsualización', 2000);
+  } catch(err){
+    alert('Error subiendo imagen: ' + err);
+  } finally {
+    $('#uploadPublishBtn').disabled = false;
+    $('#uploadPublishBtn').textContent = 'Publicar';
+  }
+}
+
+// Preview selected file
+function previewSelected(){
+  const fileInput = $('#uploadFile');
+  if(!fileInput.files || !fileInput.files[0]) { $('#uploadPreview').textContent = 'Sin previsualización'; return; }
+  const file = fileInput.files[0];
+  if(!file.type.startsWith('image/')) { $('#uploadPreview').textContent = 'Archivo no es imagen'; return; }
+  // show quick preview using FileReader (no resize)
+  const reader = new FileReader();
+  reader.onload = e => {
+    $('#uploadPreview').innerHTML = `<img src="${e.target.result}" style="max-width:100%;max-height:160px;border-radius:6px;border:1px solid rgba(255,255,255,0.03)"/>`;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Small helper: initialize events
+function init(){
+  // render existing feed
+  renderFeed();
+
+  // preview button
+  $('#uploadPreviewBtn').addEventListener('click', previewSelected);
+
+  // publish
+  $('#uploadPublishBtn').addEventListener('click', handlePublish);
+
+  // quick glitch / effects for UI
+  $('#btn-glitch').addEventListener('click', ()=> {
+    const overlay = document.getElementById('glitchOverlay');
+    overlay.classList.add('active');
+    setTimeout(()=> overlay.classList.remove('active'), 900);
+  });
+
+  // evidence button: just swap top image with last uploaded (if any)
+  $('#evidenceBtn').addEventListener('click', ()=>{
+    if(!FEED.length){ alert('No hay evidencias aún'); return; }
+    const last = FEED[0];
+    const mainImg = document.getElementById('mainImg');
+    mainImg.src = last.image;
+    $('#logText').textContent = `EVIDENCIA: ${last.title} — ${last.author}`;
+  });
+
+  // notes
+  $('#saveNote').addEventListener('click', ()=> {
+    const text = $('#noteBlock').value || '';
+    localStorage.setItem(KEY_NOTES, text);
+    alert('Nota guardada localmente');
+  });
+  $('#clearNote').addEventListener('click', ()=> {
+    if(confirm('Borrar nota?')){ $('#noteBlock').value=''; localStorage.removeItem(KEY_NOTES); }
+  });
+
+  // load notes
+  $('#noteBlock').value = localStorage.getItem(KEY_NOTES) || '';
+
+  // load initial main image fallback error handler
+  const mainImg = document.getElementById('mainImg');
+  mainImg.addEventListener('error', ()=> {
+    mainImg.alt = 'Imagen principal no encontrada. Coloca archivos en assets/images/room1.jpg o sube nuevas evidencias.';
+    mainImg.style.filter = 'grayscale(1) contrast(.8)';
+  });
+}
+
+// On ready
+document.addEventListener('DOMContentLoaded', init);
