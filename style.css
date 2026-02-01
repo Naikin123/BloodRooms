@@ -1,65 +1,147 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* --- BloodRooms: estilo oscuro / neon para ARG --- */
+:root{
+  --bg: #040304;
+  --panel: #0b0b0d;
+  --muted: #9aa8b8;
+  --text: #e8f6ff;
+  --accent: #d73cff; /* magenta neon */
+  --accent2: #4cc9f0; /* cyan neon */
+  --danger: #b30000;
+  --css-loaded: 1; /* indicador para JS: si falta, JS avisará */
 }
 
-body {
-  background: #050505;
-  color: #e0e0e0;
+/* reset mínimo */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
   font-family: "Courier New", monospace;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background: radial-gradient(1200px 600px at 10% 10%, rgba(76,201,240,0.02), transparent),
+              radial-gradient(800px 400px at 90% 90%, rgba(215,60,255,0.02), transparent),
+              var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:28px;
 }
 
-#container {
-  width: 90%;
-  max-width: 700px;
-  text-align: center;
+/* contenedor */
+#app{
+  width:100%;
+  max-width:900px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.05));
+  border:1px solid rgba(255,255,255,0.03);
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 10px 40px rgba(0,0,0,0.6);
 }
 
-.title {
-  font-size: 3rem;
-  letter-spacing: 4px;
-  margin-bottom: 10px;
-  color: #b30000;
+/* header */
+.site-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 18px;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+}
+.logo{
+  font-weight:900;
+  color:var(--accent);
+  letter-spacing:4px;
+  font-size:18px;
+  text-shadow:0 0 8px rgba(215,60,255,0.08);
+}
+.top-nav{display:flex;gap:8px}
+
+/* botones */
+.btn{
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.04);
+  color:var(--muted);
+  padding:8px 10px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+}
+.btn:hover{border-color:rgba(76,201,240,0.12); color:var(--text)}
+.btn.primary{
+  background: linear-gradient(90deg,var(--accent2),var(--accent));
+  color:#021018;
+  border:none;
+  box-shadow: 0 6px 18px rgba(76,201,240,0.06);
+}
+.btn.ghost{
+  background:transparent;
+  border:1px dashed rgba(255,255,255,0.03);
 }
 
-.subtitle {
-  font-size: 0.9rem;
-  opacity: 0.7;
-  margin-bottom: 20px;
+/* contenido */
+.content{padding:18px}
+.title{
+  font-size:22px;
+  color:var(--accent);
+  text-shadow:0 0 8px rgba(215,60,255,0.08);
+  margin-bottom:6px;
+}
+.subtitle{color:var(--muted);font-size:13px;margin-bottom:12px}
+
+/* media */
+.media{margin:12px 0;display:flex;justify-content:center}
+.media img{
+  width:100%;
+  max-width:760px;
+  height:auto;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.03);
+  filter: contrast(1.05) saturate(0.9) brightness(0.92);
+  transform-origin:center;
+  transition: filter .25s ease, transform .3s ease;
 }
 
-.image-box {
-  margin: 20px 0;
+/* efecto leve hover */
+.media img:hover{filter:contrast(1.15) saturate(1.05); transform: scale(1.01)}
+
+/* logs */
+.log{background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02); margin:8px 0}
+#logText{color:var(--muted); font-size:14px; line-height:1.5}
+
+/* footer */
+.site-footer{padding:12px;text-align:center;color:var(--muted);font-size:12px;border-top:1px solid rgba(255,255,255,0.02)}
+
+/* overlay glitch */
+.glitch-overlay{
+  position:fixed; inset:0; pointer-events:none; mix-blend-mode:overlay; opacity:0; transition:opacity .15s;
+}
+.glitch-overlay.active{
+  opacity:1;
+  background-image:
+    linear-gradient(90deg, rgba(215,60,255,0.06) 0%, transparent 20%),
+    repeating-linear-gradient(180deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 3px);
+  animation: flicker .15s steps(2) 6;
 }
 
-.image-box img {
-  width: 100%;
-  border: 1px solid #333;
-  filter: contrast(1.1) brightness(0.9);
+/* flicker animation */
+@keyframes flicker {
+  0%{opacity:0}
+  50%{opacity:0.6}
+  100%{opacity:0}
 }
 
-.log {
-  font-size: 0.85rem;
-  opacity: 0.8;
-  margin: 20px 0;
+/* glitch text (temporary) */
+.glitch-scramble {
+  display:inline-block;
+  animation: scramble 350ms steps(6) 1;
+}
+@keyframes scramble {
+  0%{opacity:1; filter: blur(0.5px)}
+  50%{transform:translateX(1px) skewX(2deg); filter: blur(1.2px)}
+  100%{transform:none; filter:none}
 }
 
-button {
-  background: transparent;
-  border: 1px solid #b30000;
-  color: #b30000;
-  padding: 10px 25px;
-  cursor: pointer;
-  font-family: inherit;
-  letter-spacing: 2px;
-}
-
-button:hover {
-  background: #b30000;
-  color: #000;
+/* responsive */
+@media(max-width:680px){
+  .media img{max-width:100%}
+  .title{font-size:18px}
 }
